@@ -1,0 +1,181 @@
+<div>
+  <div class="amHeader clearfix">
+    <div class="search fl">
+      <Input class="searchInput" v-model="listForm.name" autocomplete="off" icon="search" placeholder="搜活动名称" @on-click="searchData" @on-enter="searchData"/>
+    </div>
+    <div class="operationBtn fr">
+      <Button type="primary" class="blue" @click="showEditModal('','新增活动')">新增活动</Button>
+    </div>
+  </div>
+  <div class="amBox mgt20">
+    <table class="aiTable">
+      <thead>
+      <tr>
+        <th v-for="(item, index) in theadData" :key="item.index" :width="item.width">
+          <div class="tdCell" :class="item.class">{{ item.name }}</div>
+        </th>
+      </tr>
+      </thead>
+      <tbody v-if="tbodyData.length">
+      <tr v-for="(item, index) in tbodyData" :key="item.sizeTableId">
+        <td>
+          <div class="tdCell">{{ item.name }}</div>
+        </td>
+        <td>
+          <div class="tdCell ta-c">
+            <div class="iconfontList dibList">
+              <button class="iconfont icon-edit" @click="showEditModal(item.actId, '编辑活动')"></button>
+              <button class="iconfont icon-trash" @click="showConfirm(item.actId, '确定删除活动:' + item.name + '吗？')"></button>
+            </div>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+      <tbody v-else="tbodyData.length">
+      <tr>
+        <td class="ta-c" :colspan="theadData.length">
+          <div class="tdCell">暂无数据</div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    <Page v-if="ui.total > ui.pageSize ? true : false" class="mgt30 ta-c"
+          :current="listForm.pageIndex"
+          :page-size="ui.pageSize" :total="ui.total"
+          show-total show-elevator
+          @on-change="changePage"></Page>
+    <!--info model-->
+    <Modal class="customModal" v-model="ui.showEditModal" width="760" :mask-closable="false">
+      <h2 class="modalTitle" slot="header">
+        <span>{{ editModal.title }}</span>
+      </h2>
+      <div class="modalBox">
+        <div class="modalMain">
+          <Form ref="editForm" label-position="left" :model="editForm" :label-width="120">
+            <!--<FormItem label="活动类型" prop="type">-->
+            <!--<Input v-model="editForm.type" clearable placeholder="请输入活动类型"/>-->
+            <!--</FormItem>-->
+            <div class="diy-label flex clearfix">
+              <span class="diy-label-name">活动名称</span>
+              <Input class="flex1" v-model="editForm.name" clearable placeholder="请输入活动名称"/>
+            </div>
+            <div class="diy-label flex clearfix">
+              <div class="diy-label-name">
+                <span>活动关键词</span>
+                <el-tooltip class="item" effect="dark" content="活动中重要的关键词，用以匹配活动，关键词之间用英文逗号“,”分隔" placement="top-start">
+                  <Icon type="help-circled" size="14"></Icon>
+                </el-tooltip>
+              </div>
+              <Input class="flex1" v-model="editForm.keyword" clearable placeholder="请输入活动关键词"/>
+            </div>
+            <FormItem label="活动时间">
+              <el-date-picker
+                style="width: 340px"
+                v-model="activeDate"
+                type="datetimerange"
+                size="mini"
+                range-separator="-"
+                start-placeholder="活动开始时间"
+                end-placeholder="活动结束时间">
+              </el-date-picker>
+            </FormItem>
+            <FormItem label="参加活动商品">
+              <RadioGroup v-model="editForm.relatedPro" @on-change="changeRelatedPro">
+                <Radio :label='0' :key='0'>全部商品</Radio>
+                <Radio :label='1' :key='1'>指定商品</Radio>
+              </RadioGroup>
+            </FormItem>
+            <div v-if="editForm.relatedPro === 1">
+              <Input icon="search" v-model="productForm.name" clearable @on-click="getProductData(1)" @on-enter="getProductData(1)" style="width: 216px" placeholder="搜索商品名，商品属性"/>
+              <Table border class="modalCustomTable mgb24" :columns="products" :data="productsdata"
+                     @on-selection-change="selectProducts"></Table>
+              <Page size="small" v-if="ui.proTotal > ui.proPageSize ? true : false" class="mgb24 ta-c"
+                    :current="productForm.pageIndex"
+                    :page-size="ui.proPageSize" :total="ui.proTotal"
+                    show-total show-elevator
+                    @on-change="changeProPage"></Page>
+            </div>
+            <!--<FormItem label="活动简介" prop="intro">-->
+            <!--<Input v-model="editForm.intro" clearable placeholder="请输入活动简介"/>-->
+            <!--</FormItem>-->
+            <FormItem label="活动详情">
+              <Input style="resize: none;" v-model="editForm.details" clearable type="textarea" :rows="6" placeholder="请输入活动详情"/>
+            </FormItem>
+            <FormItem label="活动地址">
+              <Input v-model="editForm.actUrl" clearable placeholder="请输入活动地址"/>
+            </FormItem>
+            <div class="active-title mgb10 clearfix">
+              <Checkbox class="fl" v-model="editForm.isPreheat" :true-value="1" :false-value="0">活动预热</Checkbox>
+              <el-tooltip class="item" effect="dark" content="预热活动是指活动未开始但可享受活动优惠，勾选此框则表示该活动有预热；勾选之后将会出现预热开始时间和默认预热话术进行配置" placement="top-start">
+                <Icon type="help-circled" size="14"></Icon>
+              </el-tooltip>
+            </div>
+            <template v-if="editForm.isPreheat === 1">
+              <FormItem label="预热开始时间">
+                <el-date-picker
+                  v-model="editForm.preheatStartTime"
+                  type="datetime"
+                  size="mini"
+                  placeholder="请选择活动开始时间">
+                </el-date-picker>
+              </FormItem>
+              <div class="diy-label flex clearfix">
+                <div class="diy-label-name">默认预热话术
+                  <el-tooltip class="item" effect="dark" content="进行预热推销的营销话术，例如“可以提前享受优惠哦，亲赶紧进店看看吧”" placement="top-start">
+                    <Icon type="help-circled" size="14"></Icon>
+                  </el-tooltip>
+                </div>
+                <Input class="flex1" v-model="editForm.defaultPreheating" clearable placeholder="请输入默认预热话术"/>
+              </div>
+            </template>
+            <div class="diy-label flex clearfix">
+              <div class="diy-label-name">
+                默认活动话术
+                <el-tooltip class="item" effect="dark" content="进行活动推销的营销话术，例如“买一送一，错过就没有了”" placement="top-start">
+                  <Icon type="help-circled" size="14"></Icon>
+                </el-tooltip>
+              </div>
+              <Input class="flex1" v-model="editForm.defaultActivitySpeech" clearable placeholder="请输入默认活动话术"/>
+            </div>
+            <div class="diy-label flex clearfix">
+              <div class="diy-label-name">
+                自定义话术
+                <el-tooltip class="item" effect="dark" content="商家编辑的营销话术，当出现自定义话术时间与默认话术时间重复时，优先使用自定义话术，即优先级高于默认话术" placement="top-start">
+                  <Icon type="help-circled" size="14"></Icon>
+                </el-tooltip>
+              </div>
+              <div class="customBtns fr" style="position: absolute; right: 0;">
+                <Button class="custom plus" icon="plus-round" @click="plusList"></Button>
+              </div>
+            </div>
+            <div class="diy-label clearfix" v-for="(items, index) in customList" :key="index">
+              <Input v-model="items.speech" placeholder="请输入自定义话术" style="width: 310px; margin-right: 15px;"/>
+              <el-date-picker
+                style="width: 330px;"
+                v-model="items.times"
+                type="datetimerange"
+                size="mini"
+                range-separator="-"
+                start-placeholder="开始时间"
+                end-placeholder="结束时间">
+              </el-date-picker>
+              <!--<DatePicker type="datetimerange" style="width: 300px;" format="yyyy-MM-dd HH:mm:ss" v-model="items.times" placeholder="话术生效时间"></DatePicker>-->
+              <div class="customBtns fr">
+                <Button class="custom minus" icon="minus-round" @click="minusList(index)"></Button>
+              </div>
+            </div>
+            <div class="diy-label flex clearfix">
+              <div class="diy-label-name">优惠券、红包链接</div>
+              <Input class="flex1" v-model="editForm.couponLinks" clearable placeholder="请输入优惠券、红包链接"/>
+            </div>
+          </Form>
+        </div>
+      </div>
+      <div slot="footer">
+        <Button type="primary" @click="editSave('editForm')">确定</Button>
+        <Button type="text" @click="ui.showEditModal = false">取消</Button>
+      </div>
+    </Modal>
+    <confirm-modal :cd="confirmData" :ui="ui" :cb="confirmCB"></confirm-modal>
+  </div>
+</div>

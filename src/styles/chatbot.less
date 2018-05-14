@@ -1,0 +1,48 @@
+@import url("./utils.less");
+.chatbot { .wh(100%); .bgc(@white); .brd(#e2e2e2); .brdr(5px); }
+// chatbot
+.talk-title { .bgc(#f6f8f8); .lh(30px); .pd(5px 20px); .brd-b(#e2e2e2); .brdr(5px 5px 0 0); }
+.talk-list { .wh(100%); .pd(15px); .ofy(auto);
+  .talk-one { .db(); .pos-r(); .fc(12px, #c7c7c7); .mg(18px 0 10px); display: flex;
+    .talk-user-pic { .brdr(3px); .wh(30px, 30px); .mgt(18px); .db();
+      i { .fc(22px, #333); }
+    }
+    .talk-box { flex: 1; .pos-r();
+      &:before, &:after { position: absolute; top: 24px; z-index: 1; content: ' '; .wh(0, 0); border: 7px solid; }
+      .talk-intro { .lh(18px); .fgc(#666);
+        span { .fgc(#939393); .mgl(6px); visibility: hidden; }
+      }
+      &:hover {
+        .talk-intro {
+          span { visibility: visible; }
+        }
+      }
+      .talk-topic { display: flex;
+        .talk-text { .dib(); .wh(auto); .fgc(#525252); .brdr(5px); .pd(5px 15px); max-width: 80%; .lh(24px); }
+      }
+    }
+    &.talk-left {
+      .talk-user-pic { .mgr(10px); }
+      .talk-box {
+        &:before { left: -14px; border-color: transparent #e6e6e6 transparent transparent; }
+        &:after { left: -13px; border-color: transparent #fafafa transparent transparent; }
+        .talk-text { .bgc(#f9f9f9); .brd(#e0e0e0); }
+      }
+    }
+    &.talk-right { flex-direction: row-reverse;
+      .talk-user-pic { .mgl(10px); }
+      .talk-box {
+        &:before { right: -14px;border-color: #0000 #0000 #0000 #e4f0fd; }
+        &:after { right: -13px;border-color: #0000 #0000 #0000 #e4f0fd;}
+      }
+      .talk-intro { .ta-rt(); }
+      .talk-topic { flex-direction: row-reverse;
+        .talk-text { .bgc(#e4f0fd); }
+      }
+    }
+  }
+  &.talk-fr { .fr(); .bgc(#cae8ff); }
+}
+.msg-textarea { .pd(15px); .brd-t(#e2e2e2);
+  .textarea-int { .wh(100%, 80px); .no-brd(); resize: none; .of(hidden); }
+}

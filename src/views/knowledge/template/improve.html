@@ -1,0 +1,196 @@
+<div>
+  <div class="amHeader clearfix">
+    <div class="operationBtn fr">
+      <Button type="primary" class="blue" @click="ui.showUpload = true">上传原始语料</Button>
+    </div>
+  </div>
+  <!--上传-->
+  <Modal class="customModal" v-model="ui.showUpload" width="560" :mask-closable="false">
+    <h2 class="modalTitle" slot="header">
+      <span>上传原始语料</span>
+    </h2>
+    <div class="modalBox">
+      <Upload
+        type="drag"
+        show-upload-list
+        class="ver-top"
+        :data="uploadData"
+        :on-format-error="handleFormatError"
+        :on-exceeded-size="handleMaxSize"
+        action=""
+        :before-upload="getUploadFile">
+        <div style="padding: 20px 0">
+          <Icon type="ios-cloud-upload" size="52" style="color: #39f"></Icon>
+          <p>点击或拖动文件上传</p>
+        </div>
+      </Upload>
+      <div v-if="uploadData.file !== null">已选择文件: {{ uploadData.file.name }}</div>
+    </div>
+    <div slot="footer">
+      <Button type="primary" :disabled="ui.isAjax && uploadData.file === null" @click="checkUploadFile">上传</Button>
+      <Button type="text" @click="ui.showUpload = false">取消</Button>
+    </div>
+  </Modal>
+  <div class="officialMain mgt20 amBox">
+    <Tabs class="customTabs" v-model="inproveMenu">
+      <TabPane label="官方待改进知识" name="official">
+        <Table class="" :columns="theadBody" :data="tbodyData" width="100%"></Table>
+        <Page v-if="ui.total > ui.pageSize ? true : false" class="mgt30 ta-c"
+              :current="ui.pageIndex"
+              :page-size="ui.pageSize" :total="ui.total"
+              show-total show-elevator
+              @on-change="changePage"></Page>
+        <!--详情-->
+        <Modal class="customModal" v-model="ui.showInfoAnswer" width="560" :mask-closable="false">
+          <h2 class="modalTitle" slot="header">
+            <span>答案编辑</span>
+          </h2>
+          <div class="modalBox" :style="{ maxHeight: modalHeight + 'px'}">
+            <div v-if="infoData.addAnswerList.length">
+              <h3 class="improveTitle">建议新增回答</h3>
+              <ul class="improveList">
+                <li class="clearfix" v-for="(items, index) in infoData.addAnswerList" :key="index">
+                  <div class="improveContent fl">{{ items.content }}</div>
+                  <div class="customOpera plus fr" @click="operate(items.id,0)">
+                    <Icon type="plus-round"></Icon>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div v-if="infoData.modAnswerList.length">
+              <h3 class="improveTitle">建议修改回答</h3>
+              <ul class="improveList">
+                <li class="clearfix" v-for="(items, index) in infoData.modAnswerList" :key="index">
+                  <div class="improveContent improveContentEdit fl">
+                    <p>{{ items.nowAns }}</p>
+                    <p class="improveEdit">{{ items.modAns }}</p>
+                  </div>
+                  <div class="customOpera minus fr" @click="operate(items.id,1)"><i class="iconfont icon-edit"></i></div>
+                </li>
+              </ul>
+            </div>
+            <div v-if="infoData.addQuestionList.length">
+              <h3 class="improveTitle">建议新增问法</h3>
+              <ul class="improveList">
+                <li class="clearfix" v-for="(items, index) in infoData.addQuestionList" :key="index">
+                  <div class="improveContent fl">{{ items.content }}</div>
+                  <div class="customOpera plus fr" @click="operate(items.id,2)">
+                    <Icon type="plus-round"></Icon>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div v-if="infoData.delQuestionList.length">
+              <h3 class="improveTitle">建议删除问法</h3>
+              <ul class="improveList">
+                <li class="clearfix" v-for="(items, index) in infoData.delQuestionList" :key="index">
+                  <div class="improveContent fl">{{ items.content }}</div>
+                  <div class="customOpera minus fr" @click="operate(items.id,3)">
+                    <Icon type="minus-round"></Icon>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div slot="footer" class="ta-c">
+            <Button type="text" @click="ui.showInfoAnswer = false">取消</Button>
+          </div>
+        </Modal>
+      </TabPane>
+      <TabPane label="其他待改进知识" name="other">
+        <table class="aiTable">
+          <thead>
+          <tr>
+            <th v-for="(item,index) in otherTheadBody" :key="index" :width="item.width">
+              <div class="tdCell">{{ item.name }}</div>
+            </th>
+          </tr>
+          </thead>
+          <tbody v-if="otherTbodyData.length">
+          <tr v-for="items in otherTbodyData" :key="items.unfKngId">
+            <td>
+              <div class="tdCell ta-c">{{ items.times }}</div>
+            </td>
+            <td>
+              <div class="tdCell">
+                <div class="greyText">
+                  <span v-for="(item,index) in items.questionList" :key="index">{{ item }}<i>/</i></span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="tdCell">
+                <div class="greyText blackText">
+                  <span v-for="(item,index) in items.answerList" :key="index">{{ item }}<i>/</i></span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="tdCell tdNoPad">
+                <ul class="customList">
+                  <li class="customOne" v-for="(item,index) in items.classicAnsList" :key="index">{{ item }}</li>
+                </ul>
+              </div>
+            </td>
+            <td>
+              <div class="tdCell">
+                <div class="customBtns pdl20">
+                  <Button type="info" size="small" @click="fnUnknowledgeInfo(items.unfKngId, 0, '新建知识')">新建知识</Button>
+                  <div class="mgt10">
+                    <Button type="info" size="small" @click="fnUnknowledgeInfo(items.unfKngId, 1, '添加到已有知识')">添加到已有知识</Button>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+          </tbody>
+          <tbody v-else="otherTbodyData.length">
+          <tr>
+            <td class="ta-c" :colspan="otherTheadBody.length">
+              <div class="tdCell">暂无数据</div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+        <Page v-if="cui.total > cui.pageSize ? true : false" class="mgt30 ta-c"
+              :current="cui.pageIndex"
+              :page-size="cui.pageSize" :total="cui.total"
+              show-total show-elevator
+              @on-change="changeOtherPage"></Page>
+        <Modal class="customModal" v-model="cui.showInfo" width="560" :mask-closable="false">
+          <h2 class="modalTitle" slot="header">
+            <span>{{ cui.title }}</span>
+          </h2>
+          <div class="modalBox">
+            <Form :model="unknowledgeInfoData" label-position="left" :label-width="80">
+              <FormItem v-if="unOptData.type === 1" label="选择">
+                <Select v-model="unknowledgeForm.kbaseDesc">
+                  <!--@on-change="fnChangeSelect"-->
+                  <Option v-for="item in unknowledgeInfoData.customKngList" :key="item.id" :value="item.content">{{ item.content }}</Option>
+                </Select>
+              </FormItem>
+              <FormItem label="问题描述">
+                <Input v-model="unknowledgeForm.question" type="textarea" placeholder="问题描述"/>
+              </FormItem>
+              <FormItem label="问法示例">
+                <Input v-model="unknowledgeForm.kbaseDesc" type="textarea" placeholder="问法示例"/>
+              </FormItem>
+              <FormItem label="回答示例">
+                <ul class="answerSampleList">
+                  <li class="clearfix" v-for="(item,index) in unknowledgeInfoData.answerList">
+                    <input class="aiCheckbox fl" v-model="unknowledgeForm.answerList" :id="item.id" :value="item" type="checkbox"/>
+                    <input class="aiInput fr" type="text" v-model="item.content" placeholder="问法示例"/>
+                  </li>
+                </ul>
+              </FormItem>
+            </Form>
+          </div>
+          <div slot="footer" class="ta-c">
+            <Button type="primary" :disabled="ui.isAjax" @click="fnSaveUnkonwledge">保存</Button>
+            <Button type="text" @click="cui.showInfo = false">取消</Button>
+          </div>
+        </Modal>
+      </TabPane>
+    </Tabs>
+  </div>
+</div>

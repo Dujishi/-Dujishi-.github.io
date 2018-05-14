@@ -1,0 +1,31 @@
+@import url("./utils.less");
+.login-container { .wh(790px, 500px); .pos-f(); top: 50%; left: 50%; .mg(-500px/2 0 0 -790px/2);
+  .login-pic-box { .wh(470px, 500px); .pdt(112px); .brdr(10px 0 0 10px); .bgc(#004497); .pos-r();
+    &:before, &:after { .wh(100%); content: ''; }
+    &:before { .pos-a(0, 0, 0); height: 73px; .brd-b(rgba(197, 197, 197, .3)); }
+    &:after { .pos-abl(0, 0, 0); height: 88px; .bgc(rgba(35, 170, 255, .11)); .brd-t(rgba(197, 197, 197, .3)); }
+    img { .mg(0 auto); .db(); }
+  }
+  .login-form { .wh(320px, 500px); .pd(30px); .bgc(@white); .brdr(0 10px 10px 0);
+    .sys-name { .wh(100%); .fc(12px, #1087ff); .ta-c(); .pos-r(); .pdt(36px); .lh(30px);
+      &:before { .pos-a(0, 0, 50%); .wh(36px, 36px); .mgl(-36px/2); content: ''; background: url("../images/xiaowei.png"); }
+    }
+    .sys-page-name { .fc(20px, #7e7e7e); }
+  }
+  .login-tabs { .fs(0);
+    span { .wh(130px, 50px); .dib(); .fc(14px, #b6b6b6); .ta-c(); .pos-r(); .pd(10px 0); .lh(30px);
+      &.active { .fgc(#1087ff);
+        &:before { .pos-abl(0, 0, 0); content: ''; .wh(100%, 2px); .bgc(#1087ff); }
+      }
+    }
+  }
+  .login-input-list {
+    .login-input { .wh(100%, 50px); .brd-b(#e7e7e7); .pd(5px 10px); .pos-r();
+      .login-int { .no-brd(); .wh(100%, 40px); .lh(40px); .bgc(@white); .fc(14px, #606266); .dib(); .pd(0 15px); }
+      .left-icon { .pos-a(0, 12px, 0); .fgc(#1087ff);}
+    }
+  }
+  .login-other { .pd(20px 0 15px);
+  }
+  .custom-button { box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.50);}
+}

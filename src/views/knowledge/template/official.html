@@ -1,0 +1,700 @@
+<div>
+  <div class="amHeader clearfix">
+    <div class="search fl mgr20">
+      <Input class="searchInput" v-model="listForm.description" autocomplete="off" icon="search" placeholder="搜问题" @on-click="searchData" @on-enter="searchData"/>
+    </div>
+    <div class="search fl">
+      <Input class="searchInput" v-model="listForm.answer" autocomplete="off" icon="search" placeholder="搜答案" @on-click="searchData" @on-enter="searchData"/>
+    </div>
+  </div>
+  <div class="officialMain mgt20 amBox">
+    <div class="aiSlideMenu clearfix">
+      <ul class="aiSlideList fl">
+        <li class="aiSlideOne" v-for="(item,index) in slideMenuList.items" :class="{active : item.orderNo === slideMenuList.index}" :key="index" @click="changeMenu(item.orderNo)">
+          <span style="display: inline-block;">
+            {{ item.paramValue }}
+          </span>
+          <span style="display: inline-block;">
+            <b v-if="item.total > 0">{{ item.total }}</b>
+          </span>
+          <!--<span style="color: #f00" v-if="item.total > 0">({{ item.total }})</span>-->
+        </li>
+      </ul>
+      <!--<div class="aiSlideBtns fr">-->
+      <!--<button class="aibutton button-warn">批量启动</button>-->
+      <!--<button class="aibutton button-primary">批量转人工</button>-->
+      <!--&lt;!&ndash;<button class="aibutton button-default">批量转售后</button>&ndash;&gt;-->
+      <!--</div>-->
+    </div>
+    <div class="mgt20">
+      <table class="aiTable">
+        <thead>
+        <tr>
+          <th v-for="(item,index) in theadData" :key="index" :width="item.width">
+            <template v-if="item.length === 2">
+              <div class="fl ta-c" style="width: 40%">关联条件</div>
+              <div class="fl ta-c" style="width: 60%">客服答案</div>
+            </template>
+            <div v-else="item.length === 2" class="tdCell ta-c">{{ item.name }}</div>
+          </th>
+        </tr>
+        </thead>
+        <tbody v-if="tbodyData.length">
+        <tr v-for="(items,index) in tbodyData" :key="index">
+          <!--<td>-->
+          <!--<div class="tdCell">-->
+          <!--<Checkbox label="index"></Checkbox>-->
+          <!--</div>-->
+          <!--</td>-->
+          <td>
+            <div class="tdCell">{{ items.description }}</div>
+          </td>
+          <td>
+            <div class="tdCell">
+              <div class="greyText">
+                <span v-for="item in items.questions">
+                  <b class="red" v-if="!item.relateAnswer">{{ item.content }}</b>
+                  <template v-else="!item.relateAnswer">{{ item.content }}</template>
+                  <i>/</i>
+                </span>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="tdCell tdNoPad">
+              <table class="customList" style="width: 100%">
+                <tr class="customOne" v-if="items.criteria.length" v-for="itemss in items.criteria" :key="itemss.ansId">
+                  <td width="40%">
+                    <div class="criteriaOne">{{ itemss.content }}</div>
+                  </td>
+                  <td width="60%">
+                    <div class="criteriaOne clearfix" v-for="(item, i) in itemss.answers" :key="i">
+                      <span class="criteria-answer" :class="{red : item.hit}">
+                        <b v-if="item.default">[默认]</b>
+                        <span v-if="item.type === 1" class="jump-text" @click="searchLabel(item.labelDesc)">
+                          <Icon type="paper-airplane" size="16"></Icon> 跳转至：{{ item.labelDesc }}
+                        </span>
+                        <span v-if="item.type === 2" class="jump-text">
+                          <Icon type="paper-airplane" size="16"></Icon> 跳转上一个label
+                        </span>
+                        <span v-if="item.type === 3" class="jump-text">
+                          <Icon type="paper-airplane" size="16"></Icon> 合并上文
+                        </span>
+                        <template v-if="item.type === 0">
+                           <Tooltip v-if="item.needHuman === 1" class="customTips fl" placement="right-start">
+                          <i style="color: #00a1ff; margin-right: 5px;" class="iconfont icon-kefu"></i>
+                          <div slot="content">
+                            回复完转人工
+                          </div>
+                        </Tooltip>
+                        <Tooltip v-if="item.relatedTimes !== ''" class="customTips fl" placement="right-start">
+                          <span class="custom-circle">{{ item.relatedTimes }}</span>
+                          <div slot="content">
+                            关联次数：{{ item.relatedTimesDesc }}
+                          </div>
+                        </Tooltip>
+                        {{ item.content }}
+                        </template>
+                      </span>
+                      <div class="iconList fr">
+                        <button class="iconfont icon-edit" v-if="item.default" @click="showEditAnswerModal(item.ansId, items.kdgBaseId, true)"></button>
+                        <button class="iconfont icon-edit" v-else="item.default" @click="showEditAnswerModal(item.ansId, items.kdgBaseId, false)"></button>
+                        <button class="iconfont icon-trash" :disabled="item.default" @click="showConfirm(item.ansId,'确定删除答案' + item.content + '吗？',2)"></button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="2" style="border-bottom: none;">
+                    <p class="ta-c customOperaList clearfix">
+                      <span class="customLink" @click="showEditAnswerModal('', items.kdgBaseId)">添加答案</span>
+                      <span class="customLink customLinkDefault" @click="showConfirm(items.kdgBaseId,'确定将' + items.description + '恢复默认吗？',0,'')">恢复默认</span>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </td>
+          <td>
+            <div class="officialStatusBox ta-c">
+              <span v-if="items.status === 0 || items.status === ''" style="color: #ee4a4a">未启用</span>
+              <span v-if="items.status === 1" style="color: #ff9800">已启用</span>
+              <span v-else-if="items.status === 2" style="color: #00a1ff">已转人工</span>
+              <span v-else-if="items.status === 3" style="color: #858e99">已转售后</span>
+            </div>
+          </td>
+          <td>
+            <div class="customBtns ta-c">
+              <!--<el-switch @change="changeStatus"-->
+              <!--v-model="items.status"-->
+              <!--active-value="1" inactive-value="2"-->
+              <!--active-color="#ff9800" inactive-color="#00a1ff"-->
+              <!--active-text="启用" inactive-text="转人工">-->
+              <!--</el-switch>-->
+              <Button type="warning" :disabled="items.status === 1" size="small"
+                      @click="showConfirm(items.kdgBaseId,'确定启用' + items.description + '吗？',3,1)">启用
+              </Button>
+              <!--enableAnswer(1)v-if="items.status === 2" -->
+              <Button type="info" :disabled="items.status === 2" size="small"
+                      @click="showConfirm(items.kdgBaseId,'确定将' + items.description + '转人工吗？',4,1)">转人工
+              </Button>
+              <!--toHuman(1) v-if="items.status === 3"-->
+              <!--<Button type="default" :disabled="items.status === 3" size="small"-->
+              <!--@click="showConfirm(items.kdgBaseId,'确定将' + items.description + '转售后吗？',4,2)">转售后-->
+              <!--</Button>-->
+            </div>
+          </td>
+        </tr>
+        </tbody>
+        <tbody v-else="tbodyData.length">
+        <tr>
+          <td class="ta-c" :colspan="theadData.length">
+            <div class="tdCell">暂无数据</div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <Page v-if="ui.total > ui.pageSize ? true : false" class="mgt30 ta-c"
+            :current="listForm.pageIndex"
+            :page-size="ui.pageSize" :total="ui.total"
+            show-total show-elevator
+            @on-change="changePage"></Page>
+    </div>
+  </div>
+  <confirm-modal :cd="confirmData" :ui="ui" :cb="confirmCB"></confirm-modal>
+  <!--答案操作-->
+  <Modal class="customModal" v-model="ui.showEditAnswer" width="560" :mask-closable="false">
+    <h2 class="modalTitle" slot="header">
+      <span>答案编辑</span>
+    </h2>
+    <div class="modalBox" :style="{ height: modalHeight + 'px'}">
+      <Form v-model="answerForm" label-position="left" :label-width="85">
+        <FormItem label="问题描述">
+          <Input v-model="answerForm.description" :disabled="isDefault" placeholder="请输入问题描述"/>
+        </FormItem>
+        <FormItem label="关联问法">
+          <CheckboxGroup v-model="answerForm.questionList">
+            <Checkbox v-for="item in editData.questions" :key="item.quesId" :disabled="isDefault" :label="item.quesId">{{ item.content }}</Checkbox>
+          </CheckboxGroup>
+        </FormItem>
+        <!--admin start-->
+        <template v-if="isAdmin === '1'">
+          <div class="custom-slide ta-c">
+            <RadioGroup v-model="answerForm.isRedirect" type="button" size="large" @on-change="umStatus" :disabled="isDefault">
+              <Radio :label="0" :key="0">文本编辑</Radio>
+              <Radio :label="1" :key="1">跳转
+                <Icon type="locked" v-if="$store.state.admin.paramList.indexOf('跳转') > -1"></Icon>
+              </Radio>
+            </RadioGroup>
+          </div>
+          <template v-if="answerForm.isRedirect === 1">
+            <div class="custom-slide custom-slide-line ta-c">
+              <RadioGroup v-model="answerForm.redirectType" type="button" :disabled="isDefault">
+                <Radio :label="1" :key="1">跳转链接
+                  <el-tooltip class="item" effect="dark" content="此功能启用以后，买家的问题如果被分类到这个问法，会自动跳转到设定好的Label去选择回答" placement="top">
+                    <Icon type="help-circled" size="14"></Icon>
+                  </el-tooltip>
+                </Radio>
+                <Radio :label="2" :key="2">跳转上文
+                  <el-tooltip class="item" effect="dark" content="此功能启用以后，买家的问题如果被分类到这个问法，会自动跳转到上一句买家问题对应的Label去选择回答" placement="top">
+                    <Icon type="help-circled" size="14"></Icon>
+                  </el-tooltip>
+                </Radio>
+              </RadioGroup>
+            </div>
+            <Select :disabled="isDefault" v-if="answerForm.redirectType === 1" v-model="answerForm.redirectLabelId" placeholder="请选择跳转label" transfer filterable clearable>
+              <Option v-for="(item, index) in ailabelList" :value="item.aiLabelId" :key="index">【{{ item.aiLabelId }}】{{ item.desc }}</Option>
+            </Select>
+            <div class="custom-slide custom-slide-button ta-c" v-else-if="answerForm.redirectType === 2">
+              <RadioGroup v-model="answerForm.redirectContextType" type="button" :disabled="isDefault">
+                <Radio :label="0" :key="0">跳转上一个label</Radio>
+                <Radio :label="1" :key="1">合并上文
+                  <el-tooltip class="item" effect="dark" content="此功能启用以后，会把买家当前句和上一句合并起来，组成新的一句话，把这句话重新发给我们的算法模型去进行分类处理" placement="top">
+                    <Icon type="help-circled" size="14"></Icon>
+                  </el-tooltip>
+                </Radio>
+              </RadioGroup>
+            </div>
+          </template>
+          <!--<div class="customFormItem clearfix">-->
+          <!--<Checkbox class="fl" v-model="answerNewData.redirectLabelId.checked" @on-change="umStatus">跳转-->
+          <!--<Icon type="locked" v-if="$store.state.admin.paramList.indexOf('跳转') > -1"></Icon>-->
+          <!--</Checkbox>-->
+          <!--<Select v-if="answerNewData.redirectLabelId.checked" class="fr" style="width: 431px;" v-model="answerForm.redirectLabelId" transfer filterable clearable>-->
+          <!--<Option v-for="(item, index) in ailabelList" :value="item.aiLabelId" :key="index">【{{ item.aiLabelId }}】{{ item.desc }}</Option>-->
+          <!--</Select>-->
+          <!--</div>-->
+          <FormItem v-if="answerForm.isRedirect !== 1 && answerForm.variables && answerForm.variables.length" class="mgt20 mgb10" label="可插入变量">
+            <div class="customCheckbox">
+              <span class="cone" v-for="item in editData.variables" :key="item.paramId" @click="selectedVariables(item.paramValue)">{{ item.paramValue }}</span>
+            </div>
+          </FormItem>
+          <h4 class="custom-title mgt10">答案内容</h4>
+          <div class="umPosi mgb24" :class="{disabled : answerForm.isRedirect !== 0}">
+            <Checkbox v-if="!isDefault && answerForm.needHuman !== 1" class="posi-checkbox" v-model="answerForm.endTurn" :true-value="1" :false-value="0">回合结束</Checkbox>
+            <RadioGroup class="inputToUm" v-model="answerForm.needHuman">
+              <Radio :label="0" :key="0">正常回复</Radio>
+              <Radio :label="1" :key="1">回复完转人工</Radio>
+              <!--<Radio :label="2" :key="2">回复完转售后</Radio>-->
+            </RadioGroup>
+            <u-meditor :content="um.content" :config="um.config" :toolbar="um.toolbar" ref="umeditor"></u-meditor>
+          </div>
+          <div class="clearfix">
+            <div class="customFormItem clearfix">
+              <Checkbox class="fl" v-model="answerNewData.portraitScene.checked" :disabled="isDefault">用户画像
+                <Icon type="locked" v-if="$store.state.admin.paramList.indexOf('设置用户画像') > -1"></Icon>
+              </Checkbox>
+            </div>
+            <div class="customFormItem clearfix" v-if="answerNewData.portraitScene.checked">
+              <Select v-model="answerForm.portraitSceneList[0].portraitScene" style="width: 55%" class="fl">
+                <Option v-for="(item, index) in portraitSceneItems" :key="item.value + index" :value="item.value">
+                  {{ item.key }}
+                </Option>
+              </Select>
+              <Input v-if="type === 'text'" v-model="answerForm.portraitSceneList[0].portraitSceneValue" class="fr" style="width: 40%"/>
+              <Select style="width: 40%" v-model="answerForm.portraitSceneList[0].portraitSceneValue" class="fr" v-if="type === 'select'">
+                <Option v-for="(item, index) in option" :key="item.value + index" :value="item.value" :selected="index === 1">
+                  {{ item.key }}
+                </Option>
+              </Select>
+            </div>
+          </div>
+          <div class="custom-label mgt20 clearfix">
+              <span class="label-name">关联时效
+                <Icon type="locked" v-if="$store.state.admin.paramList.indexOf('关联时效') > -1"></Icon>
+              </span>
+            <Select class="fr" v-model="answerForm.periodTimeId" :disabled="isDefault" filterable clearable style="width: 400px;">
+              <Option v-for="item in editData.periodTimes" :value="item.periodTimeId" :key="item.periodTimeId">{{ item.name }}</Option>
+            </Select>
+          </div>
+          <div class="custom-label clearfix">
+            <div class="label-name">关联商品
+              <Icon type="locked" v-if="$store.state.admin.paramList.indexOf('关联商品') > -1"></Icon>
+            </div>
+            <RadioGroup style="margin: 4px 0 0 33px;" v-model="answerForm.relatedPro" @on-change="changeRelatedPro">
+              <Radio :label="0" :key="0" :disabled="isDefault">全部</Radio>
+              <Radio :label="1" :key="1" :disabled="isDefault">指定商品</Radio>
+            </RadioGroup>
+          </div>
+          <div v-if="answerForm.relatedPro === 1">
+            <Input icon="search" v-model="productForm.name" @on-click="getProductData(1)" @on-enter="getProductData(1)" style="width: 216px" placeholder="搜索商品名，商品属性"/>
+            <Table border class="modalCustomTable" :columns="products" :data="productsdata"
+                   @on-selection-change="selectProducts"></Table>
+            <Page size="small" v-if="ui.proTotal > ui.proPageSize ? true : false" class="mgt30 ta-c"
+                  :current="productForm.pageIndex"
+                  :page-size="ui.proPageSize" :total="ui.proTotal"
+                  show-total show-elevator
+                  @on-change="changeProPage"></Page>
+          </div>
+          <Tooltip content="敬请期待" placement="top" style="display: block;">
+            <div class="customFormItem clearfix">
+              <Checkbox class="fl" v-model="answerNewData.orderGuide.checked" :disabled="isDefault || developing">回答完成后触发下单引导
+                <Icon type="locked" v-if="$store.state.admin.paramList.indexOf('回答完成后触发下单引导') > -1"></Icon>
+              </Checkbox>
+              <Input class="fr" style="width: 340px" v-if="answerNewData.orderGuide.checked && !developing" v-model="answerNewData.orderGuide.value"/>
+            </div>
+          </Tooltip>
+          <Tooltip content="敬请期待" placement="top" style="display: block;">
+            <div class="customFormItem clearfix">
+              <Checkbox class="fl" v-model="answerNewData.productRec.checked" :disabled="isDefault || developing">回答完成后触发商品推荐
+                <Icon type="locked" v-if="$store.state.admin.paramList.indexOf('回答完成后触发商品推荐') > -1"></Icon>
+              </Checkbox>
+              <Input class="fr" style="width: 340px" v-if="answerNewData.productRec.checked && !developing" v-model="answerNewData.productRec.value"/>
+            </div>
+          </Tooltip>
+          <div class="mgb10" style="text-align: center;">
+            <Button type="dashed" class="moreConditions" v-model="answerForm.otherCondition" @click="otherConditions">其他关联条件
+              <Icon type="ios-arrow-up"></Icon>
+            </Button>
+          </div>
+          <template v-if="answerForm.otherCondition">
+            <div class="customFormItem clearfix" style="position: relative;">
+              <Checkbox class="fl" v-model="editData.questionPre.checked" @on-change="chooseQuestionPre" :disabled="isDefault">关联前置问题
+                <Icon type="locked" v-if="$store.state.admin.paramList.indexOf('关联前置问题') > -1"></Icon>
+              </Checkbox>
+              <Select v-if="editData.questionPre.checked" class="fr" style="width: 400px;" v-model="answerForm.aiLabelId" :disabled="isDefault" transfer filterable clearable>
+                <Option v-for="(item, index) in ailabelList" :value="item.aiLabelId" :key="index">【{{ item.aiLabelId }}】{{ item.desc }}</Option>
+              </Select>
+            </div>
+            <div class="mgt20 clearfix">
+              <Checkbox :disabled="isDefault" v-model="editData.timesRel.checked">关联次数
+                <Icon type="locked" v-if="$store.state.admin.paramList.indexOf('关联次数') > -1"></Icon>
+              </Checkbox>
+              <div class="mgt10 clearfix">
+                <div class="customCheckbox fl" v-if="editData.timesRel.checked">
+                  <template v-if="relatedTimes && relatedTimes.length">
+                    <el-checkbox-group v-model="answerForm.relatedTimes" :disabled="isDefault" size="small" @change="changeRelatedTimes">
+                      <el-checkbox-button v-for="item in relatedTimes" :label="item.value" :key="item.value">{{ item.content }}</el-checkbox-button>
+                    </el-checkbox-group>
+                  </template>
+                </div>
+                <div class="customBtns fr">
+                  <Button class="custom plus" v-if="editData.timesRel.checked" @click="plusRelateTimes" :disabled="isDefault" icon="plus-round"></Button>
+                  <Button class="custom minus" v-if="editData.timesRel.checked && relatedTimes.length" @click="minusRelateTimes" :disabled="isDefault" icon="minus-round"></Button>
+                </div>
+              </div>
+            </div>
+            <div class="customCheckbox mgb10" v-for="items in otherConditionData" :key="items.name">
+              <template v-if="items.items && items.items.length">
+                <div>
+                  <Checkbox v-model="items.checked" :disabled="isDefault" :label="items.name">{{ items.title }}
+                    <Icon type="locked" v-if="$store.state.admin.paramList.indexOf(items.name) > -1"></Icon>
+                  </Checkbox>
+                </div>
+                <el-radio-group class="mgt15" v-if="items.checked && !items.multiSelect" :disabled="!items.checked" v-model="items.checkedItem[0]" size="small">
+                  <el-radio-button :disabled="isDefault" v-for="item in items.items" :key="item.paramId" :label="item.paramId">{{ item.paramValue }}</el-radio-button>
+                </el-radio-group>
+                <el-checkbox-group class="mgt15" v-else="items.checked && items.multiSelect" :disabled="!items.checked" v-model="items.checkedItem" size="small">
+                  <el-checkbox-button :disabled="isDefault" v-for="item in items.items" :key="item.paramId" :label="item.paramId">{{ item.paramValue }}</el-checkbox-button>
+                </el-checkbox-group>
+              </template>
+            </div>
+            <h4 class="mgb10 clearfix">
+              <Checkbox :disabled="isDefault" v-model="editData.persona.checked">关联用户画像
+                <Icon type="locked" v-if="$store.state.admin.paramList.indexOf('关联用户画像') > -1"></Icon>
+              </Checkbox>
+              <div class="customBtns fr" v-if="editData.persona.checked">
+                <Button class="custom plus" @click="plusOtherAttribute(answerForm.persona, editData.persona.attributes[0].value, editData.persona.relations[0].value)" icon="plus-round"></Button>
+              </div>
+            </h4>
+            <ul v-if="editData.persona.checked">
+              <li v-for="(items,index) in answerForm.persona" :key="index">
+                <FormItem :label="'画像条件 '+ (index + 1)">
+                  <Select v-model="items.conditionName" filterable clearable style="width:130px; margin-right: 5px">
+                    <Option v-for="(item,i) in editData.persona.attributes" :value="item.value" :key="i">{{ item.name }}</Option>
+                  </Select>
+                  <Select v-model="items.relationValue" filterable clearable style="width:80px; margin-right: 5px">
+                    <Option v-for="(item,i) in editData.persona.relations" :value="item.value" :key="i">{{ item.name }}</Option>
+                  </Select>
+                  <Input v-model="items.conditionValue" style="width: 130px;"/>
+                  <div class="customBtns fr">
+                    <Button class="custom minus" @click="minusOtherAttribute(answerForm.persona, index)" icon="minus-round"></Button>
+                  </div>
+                </FormItem>
+              </li>
+            </ul>
+            <h4 class="mgb10 clearfix">
+              <Checkbox :disabled="isDefault" v-model="editData.productAttr.checked">关联商品属性
+                <Icon type="locked" v-if="$store.state.admin.paramList.indexOf('关联商品属性') > -1"></Icon>
+              </Checkbox>
+              <div class="customBtns fr" v-if="editData.productAttr.checked">
+                <Button class="custom plus" @click="plusOtherAttribute(answerForm.productAttr, editData.productAttr.attributes[0].value, editData.productAttr.relations[0].value)" icon="plus-round"></Button>
+              </div>
+            </h4>
+            <ul v-if="editData.productAttr.checked">
+              <li v-for="(items,index) in answerForm.productAttr" :key="index">
+                <FormItem :label="'商品属性 '+ (index + 1)">
+                  <Select v-model="items.conditionName" filterable clearable style="width:130px; margin-right: 5px">
+                    <Option v-for="(item,i) in editData.productAttr.attributes" :value="item.value" :key="i">{{ item.name }}</Option>
+                  </Select>
+                  <Select v-model="items.relationValue" filterable clearable style="width:80px; margin-right: 5px">
+                    <Option v-for="(item,i) in editData.productAttr.relations" :value="item.value" :key="i">{{ item.name }}</Option>
+                  </Select>
+                  <Input v-model="items.conditionValue" style="width: 130px;"/>
+                  <div class="customBtns fr">
+                    <Button class="custom minus" @click="minusOtherAttribute(answerForm.productAttr, index)" icon="minus-round"></Button>
+                  </div>
+                </FormItem>
+              </li>
+            </ul>
+            <div class="customFormItem clearfix">
+              <Checkbox class="fl" v-model="editData.keyword.checked" :disabled="isDefault">关联关键字
+                <Icon type="locked" v-if="$store.state.admin.paramList.indexOf('关联关键字') > -1"></Icon>
+              </Checkbox>
+              <Input class="fr" v-if="editData.keyword.checked" style="width: 400px" v-model="answerForm.keyword"/>
+            </div>
+            <Checkbox class="mgt10" :disabled="isDefault" :true-value="1" :false-value="0" v-model="answerForm.missParam">关联缺失参数
+              <Icon type="locked" v-if="$store.state.admin.paramList.indexOf('关联缺失参数') > -1"></Icon>
+            </Checkbox>
+            <div class="customFormItem mgt20 clearfix" style="position: relative;">
+              <Checkbox class="fl" :disabled="isDefault" v-model="answerNewData.paramExtract.checked" @on-change="selectParamExtract">计算函数
+                <Icon type="locked" v-if="$store.state.admin.paramList.indexOf('计算函数') > -1"></Icon>
+                <el-tooltip class="item" effect="dark" placement="top" v-if="errorTitle !== ''">
+                  <Icon type="help-circled" size="14"></Icon>
+                  <div slot="content" v-html="errorTitle"></div>
+                </el-tooltip>
+              </Checkbox>
+              <Select class="fr" v-if="answerNewData.paramExtract.checked" style="width: 400px;" v-model="answerForm.paramExtract" :disabled="isDefault" placeholder="请选择计算函数" @on-change="changeParamExtract" filterable clearable>
+                <Option v-for="item in editData.paramExtract.items" :value="item.paramId" :key="item.paramId">{{ item.paramValue }}</Option>
+              </Select>
+            </div>
+            <div class="customCheckbox mgb10" v-if="answerNewData.paramExtract.checked && answerForm.paramExtract !== ''">
+              <el-checkbox-group v-model="errorCodes" size="small">
+                <el-checkbox-button :disabled="isDefault" v-for="item in errorCode.items" :key="item.paramId" :label="item.paramId">{{ item.paramValue }}</el-checkbox-button>
+              </el-checkbox-group>
+            </div>
+            <div class="customFormItem mgt20 clearfix" style="position: relative;">
+              <Checkbox class="fl" :disabled="isDefault" v-model="answerNewData.commonConfigId.checked" @on-change="selectCommConf">店铺配置
+                <Icon type="locked" v-if="$store.state.admin.paramList.indexOf('店铺配置') > -1"></Icon>
+              </Checkbox>
+              <Select class="fr" v-if="answerNewData.commonConfigId.checked" style="width: 400px;" v-model="answerForm.commonConfigId" :disabled="isDefault" placeholder="请选择店铺配置" @on-change="changeCommConf" filterable clearable>
+                <Option v-for="item in editData.commonConfigId.items" :value="item.paramId" :key="item.paramId">{{ item.paramValue }}</Option>
+              </Select>
+            </div>
+            <div class="customCheckbox mgb10" v-if="answerNewData.commonConfigId.checked && answerForm.commonConfigId !== ''">
+              <el-checkbox-group v-model="commonConfigValue" size="small">
+                <el-checkbox-button :disabled="isDefault" v-for="item in comConfSingleValue.items" :key="item.paramId" :label="item.paramId">{{ item.paramValue }}</el-checkbox-button>
+              </el-checkbox-group>
+            </div>
+          </template>
+        </template>
+        <template v-else="isAdmin === '1'">
+          <div class="custom-slide ta-c" v-if="$store.state.admin.paramList.indexOf('跳转') === -1">
+            <RadioGroup v-model="answerForm.isRedirect" type="button" size="large" @on-change="umStatus" :disabled="isDefault">
+              <Radio :label="0" :key="0">文本编辑</Radio>
+              <Radio :label="1" :key="1">跳转</Radio>
+            </RadioGroup>
+          </div>
+          <template v-if="answerForm.isRedirect === 1 && $store.state.admin.paramList.indexOf('跳转') === -1">
+            <div class="custom-slide custom-slide-line ta-c">
+              <RadioGroup v-model="answerForm.redirectType" type="button" :disabled="isDefault">
+                <Radio :label="1" :key="1">跳转链接
+                  <el-tooltip class="item" effect="dark" content="此功能启用以后，买家的问题如果被分类到这个问法，会自动跳转到设定好的Label去选择回答" placement="top">
+                    <Icon type="help-circled" size="14"></Icon>
+                  </el-tooltip>
+                </Radio>
+                <Radio :label="2" :key="2">跳转上文
+                  <el-tooltip class="item" effect="dark" content="此功能启用以后，买家的问题如果被分类到这个问法，会自动跳转到上一句买家问题对应的Label去选择回答" placement="top">
+                    <Icon type="help-circled" size="14"></Icon>
+                  </el-tooltip>
+                </Radio>
+              </RadioGroup>
+            </div>
+            <Select :disabled="isDefault" v-if="answerForm.redirectType === 1" v-model="answerForm.redirectLabelId" placeholder="请选择跳转label" transfer filterable clearable>
+              <Option v-for="(item, index) in ailabelList" :value="item.aiLabelId" :key="index">【{{ item.aiLabelId }}】{{ item.desc }}</Option>
+            </Select>
+            <div class="custom-slide custom-slide-button ta-c" v-else-if="answerForm.redirectType === 2">
+              <RadioGroup v-model="answerForm.redirectContextType" type="button" :disabled="isDefault">
+                <Radio :label="0" :key="0">跳转上一个label</Radio>
+                <Radio :label="1" :key="1">合并上文
+                  <el-tooltip class="item" effect="dark" content="此功能启用以后，会把买家当前句和上一句合并起来，组成新的一句话，把这句话重新发给我们的算法模型去进行分类处理" placement="top">
+                    <Icon type="help-circled" size="14"></Icon>
+                  </el-tooltip>
+                </Radio>
+              </RadioGroup>
+            </div>
+          </template>
+
+          <!--<div class="customFormItem clearfix" v-if="$store.state.admin.paramList.indexOf('跳转') === -1">-->
+          <!--<Checkbox class="fl" v-model="answerNewData.redirectLabelId.checked" @on-change="umStatus">跳转</Checkbox>-->
+          <!--<Select v-if="answerNewData.redirectLabelId.checked" class="fr" style="width: 431px;" v-model="answerForm.redirectLabelId" transfer filterable clearable>-->
+          <!--<Option v-for="(item, index) in ailabelList" :value="item.aiLabelId" :key="index">【{{ item.aiLabelId }}】{{ item.desc }}</Option>-->
+          <!--</Select>-->
+          <!--</div>-->
+          <FormItem v-if="answerForm.isRedirect !== 1 && answerForm.variables && answerForm.variables.length" class="mgt20 mgb10" label="可插入变量">
+            <div class="customCheckbox">
+              <span class="cone" v-for="item in editData.variables" :key="item.paramId" @click="selectedVariables(item.paramValue)">{{ item.paramValue }}</span>
+            </div>
+          </FormItem>
+          <h4 class="custom-title mgt10">答案内容</h4>
+          <div class="umPosi mgb24" :class="{disabled : answerForm.isRedirect === 1}">
+            <Checkbox class="posi-checkbox" v-if="!isDefault && answerForm.needHuman !== 1" v-model="answerForm.endTurn" :true-value="1" :false-value="0">回合结束</Checkbox>
+            <RadioGroup class="inputToUm" v-model="answerForm.needHuman">
+              <Radio :label="0" :key="0">正常回复</Radio>
+              <Radio :label="1" :key="1">回复完转人工</Radio>
+              <!--<Radio :label="2" :key="2">回复完转售后</Radio>-->
+            </RadioGroup>
+            <u-meditor :content="um.content" :config="um.config" :toolbar="um.toolbar" ref="umeditor"></u-meditor>
+          </div>
+          <div class="clearfix" v-if="$store.state.admin.paramList.indexOf('设置用户画像') === -1">
+            <div class="customFormItem clearfix">
+              <Checkbox class="fl" v-model="answerNewData.portraitScene.checked" :disabled="isDefault">用户画像</Checkbox>
+            </div>
+            <div class="customFormItem clearfix" v-if="answerNewData.portraitScene.checked">
+              <Select v-model="answerForm.portraitSceneList[0].portraitScene" style="width: 55%" class="fl">
+                <Option v-for="(item, index) in portraitSceneItems" :key="index + item.value" :value="item.value">
+                  {{ item.key }}
+                </Option>
+              </Select>
+              <Input v-if="type === 'text'" v-model="answerForm.portraitSceneList[0].portraitSceneValue" class="fr" style="width: 40%"/>
+              <Select style="width: 40%" v-model="answerForm.portraitSceneList[0].portraitSceneValue" class="fr" v-if="type === 'select'">
+                <Option v-for="(item, index) in option" :key="index + item.value" :value="item.value" :selected="index === 1">
+                  {{ item.key }}
+                </Option>
+              </Select>
+              <!--<div v-for="(item, index) in answerForm.portraitScene.selectList" :key="index" class="mgt10 clearfix">-->
+              <!--<Select class="fl" v-model="item.portraitScene" :disabled="isDefault" filterable clearable style="width: 300px;" @on-change="changeSence(item.portraitScene, item.type)">-->
+              <!--<Option v-for="(x, i) in item.items" :value="x.value" :key="i">{{ x.key }}</Option>-->
+              <!--</Select>-->
+              <!--<template>-->
+              <!--<Input v-if="item.type === 'text'" v-model="item.portraitSceneValue" style="width: 200px" class="fr"/>-->
+              <!--</template>-->
+              <!--<Select v-if="item.type  === 'select'" class="fr" v-model="item.portraitSceneValue" :disabled="isDefault" filterable clearable style="width: 200px;">-->
+              <!--<Option v-for="(x, i) in item.options" :value="x.value" :key="i">{{ x.key }}</Option>-->
+              <!--</Select>-->
+              <!--</div>-->
+            </div>
+          </div>
+          <div class="custom-label clearfix" v-if="$store.state.admin.paramList.indexOf('关联时效') === -1">
+            <span class="label-name">关联时效</span>
+            <Select class="fr" v-model="answerForm.periodTimeId" :disabled="isDefault" filterable clearable style="width: 400px;">
+              <Option v-for="item in editData.periodTimes" :value="item.periodTimeId" :key="item.periodTimeId">{{ item.name }}</Option>
+            </Select>
+          </div>
+          <template v-if="$store.state.admin.paramList.indexOf('关联商品') === -1">
+            <div class="custom-label clearfix">
+              <div class="label-name">关联商品</div>
+              <RadioGroup style="margin: 4px 0 0 33px;" v-model="answerForm.relatedPro" @on-change="changeRelatedPro">
+                <Radio :label="0" :key="0" :disabled="isDefault">全部</Radio>
+                <Radio :label="1" :key="1" :disabled="isDefault">指定商品</Radio>
+              </RadioGroup>
+            </div>
+            <div v-if="answerForm.relatedPro === 1">
+              <Input icon="search" v-model="productForm.name" @on-click="getProductData(1)" @on-enter="getProductData(1)" style="width: 216px" placeholder="搜索商品名，商品属性"/>
+              <Table border class="modalCustomTable" :columns="products" :data="productsdata"
+                     @on-selection-change="selectProducts"></Table>
+              <Page size="small" v-if="ui.proTotal > ui.proPageSize ? true : false" class="mgt30 ta-c"
+                    :current="productForm.pageIndex"
+                    :page-size="ui.proPageSize" :total="ui.proTotal"
+                    show-total show-elevator
+                    @on-change="changeProPage"></Page>
+            </div>
+          </template>
+          <template v-if="$store.state.admin.paramList.indexOf('回答完成后触发下单引导') === -1">
+            <Tooltip content="敬请期待" placement="top" style="display: block;">
+              <div class="customFormItem clearfix">
+                <Checkbox class="fl" v-model="answerNewData.orderGuide.checked" :disabled="isDefault || developing">回答完成后触发下单引导</Checkbox>
+                <Input class="fr" style="width: 340px" v-if="answerNewData.orderGuide.checked && !developing" v-model="answerNewData.orderGuide.value"/>
+              </div>
+            </Tooltip>
+          </template>
+          <template v-if="$store.state.admin.paramList.indexOf('回答完成后触发商品推荐') === -1">
+            <Tooltip content="敬请期待" placement="top" style="display: block;">
+              <div class="customFormItem clearfix">
+                <Checkbox class="fl" v-model="answerNewData.productRec.checked" :disabled="isDefault || developing">回答完成后触发商品推荐</Checkbox>
+                <Input class="fr" style="width: 340px" v-if="answerNewData.productRec.checked && !developing" v-model="answerNewData.productRec.value"/>
+              </div>
+            </Tooltip>
+          </template>
+          <div class="mgb10" style="text-align: center;">
+            <Button type="dashed" class="moreConditions" v-model="answerForm.otherCondition" @click="otherConditions">其他关联条件
+              <Icon type="ios-arrow-up"></Icon>
+            </Button>
+          </div>
+          <template v-if="answerForm.otherCondition">
+            <div v-if="$store.state.admin.paramList.indexOf('关联前置问题') === -1" class="customFormItem clearfix" style="position: relative;">
+              <Checkbox class="fl" v-model="editData.questionPre.checked" @on-change="chooseQuestionPre" :disabled="isDefault">关联前置问题</Checkbox>
+              <Select v-if="editData.questionPre.checked" class="fr" style="width: 400px;" v-model="answerForm.aiLabelId" :disabled="isDefault" transfer filterable clearable>
+                <Option v-for="(item, index) in ailabelList" :value="item.aiLabelId" :key="index">【{{ item.aiLabelId }}】{{ item.desc }}</Option>
+              </Select>
+            </div>
+            <div class="mgt20 clearfix" v-if="$store.state.admin.paramList.indexOf('关联次数') === -1">
+              <Checkbox :disabled="isDefault" v-model="editData.timesRel.checked">关联次数</Checkbox>
+              <div class="mgt10 clearfix">
+                <div class="customCheckbox fl" v-if="editData.timesRel.checked">
+                  <template v-if="relatedTimes && relatedTimes.length">
+                    <el-checkbox-group v-model="answerForm.relatedTimes" :disabled="isDefault" size="small" @change="changeRelatedTimes">
+                      <el-checkbox-button v-for="item in relatedTimes" :label="item.value" :key="item.value">{{ item.content }}</el-checkbox-button>
+                    </el-checkbox-group>
+                  </template>
+                </div>
+                <div class="customBtns fr">
+                  <Button class="custom plus" v-if="editData.timesRel.checked" @click="plusRelateTimes" :disabled="isDefault" icon="plus-round"></Button>
+                  <Button class="custom minus" v-if="editData.timesRel.checked && relatedTimes.length" @click="minusRelateTimes" :disabled="isDefault" icon="minus-round"></Button>
+                </div>
+              </div>
+            </div>
+            <div class="customCheckbox mgb10" v-for="items in otherConditionData" v-if="$store.state.admin.paramList.indexOf('关联订单状态') === -1 && $store.state.admin.paramList.indexOf('关联商品库存') === -1" :key="items.name">
+              <template v-if="items.items && items.items.length">
+                <div>
+                  <Checkbox v-model="items.checked" :disabled="isDefault" :label="items.name">{{ items.title }}</Checkbox>
+                </div>
+                <el-radio-group class="mgt15" v-if="items.checked && !items.multiSelect" :disabled="!items.checked" v-model="items.checkedItem[0]" size="small">
+                  <el-radio-button :disabled="isDefault" v-for="item in items.items" :key="item.paramId" :label="item.paramId">{{ item.paramValue }}</el-radio-button>
+                </el-radio-group>
+                <el-checkbox-group class="mgt15" v-else="items.checked && items.multiSelect" :disabled="!items.checked" v-model="items.checkedItem" size="small">
+                  <el-checkbox-button :disabled="isDefault" v-for="item in items.items" :key="item.paramId" :label="item.paramId">{{ item.paramValue }}</el-checkbox-button>
+                </el-checkbox-group>
+              </template>
+            </div>
+            <template v-if="$store.state.admin.paramList.indexOf('关联用户画像') === -1">
+              <h4 class="mgb10 clearfix">
+                <Checkbox :disabled="isDefault" v-model="editData.persona.checked">关联用户画像</Checkbox>
+                <div class="customBtns fr" v-if="editData.persona.checked">
+                  <Button class="custom plus" @click="plusOtherAttribute(answerForm.persona, editData.persona.attributes[0].value, editData.persona.relations[0].value)" icon="plus-round"></Button>
+                </div>
+              </h4>
+              <ul v-if="editData.persona.checked">
+                <li v-for="(items,index) in answerForm.persona" :key="index">
+                  <FormItem :label="'画像条件 '+ (index + 1)">
+                    <Select v-model="items.conditionName" filterable clearable style="width:130px; margin-right: 5px">
+                      <Option v-for="(item,i) in editData.persona.attributes" :value="item.value" :key="i">{{ item.name }}</Option>
+                    </Select>
+                    <Select v-model="items.relationValue" filterable clearable style="width:80px; margin-right: 5px">
+                      <Option v-for="(item,i) in editData.persona.relations" :value="item.value" :key="i">{{ item.name }}</Option>
+                    </Select>
+                    <Input v-model="items.conditionValue" style="width: 130px;"/>
+                    <div class="customBtns fr">
+                      <Button class="custom minus" @click="minusOtherAttribute(answerForm.persona, index)" icon="minus-round"></Button>
+                    </div>
+                  </FormItem>
+                </li>
+              </ul>
+            </template>
+            <template v-if="$store.state.admin.paramList.indexOf('关联商品属性') === -1">
+              <h4 class="mgb10 clearfix">
+                <Checkbox :disabled="isDefault" v-model="editData.productAttr.checked">关联商品属性</Checkbox>
+                <div class="customBtns fr" v-if="editData.productAttr.checked">
+                  <Button class="custom plus" @click="plusOtherAttribute(answerForm.productAttr, editData.productAttr.attributes[0].value, editData.productAttr.relations[0].value)" icon="plus-round"></Button>
+                </div>
+              </h4>
+              <ul v-if="editData.productAttr.checked">
+                <li v-for="(items,index) in answerForm.productAttr" :key="index">
+                  <FormItem :label="'商品属性 '+ (index + 1)">
+                    <Select v-model="items.conditionName" filterable clearable style="width:130px; margin-right: 5px">
+                      <Option v-for="(item,i) in editData.productAttr.attributes" :value="item.value" :key="i">{{ item.name }}</Option>
+                    </Select>
+                    <Select v-model="items.relationValue" filterable clearable style="width:80px; margin-right: 5px">
+                      <Option v-for="(item,i) in editData.productAttr.relations" :value="item.value" :key="i">{{ item.name }}</Option>
+                    </Select>
+                    <Input v-model="items.conditionValue" style="width: 130px;"/>
+                    <div class="customBtns fr">
+                      <Button class="custom minus" @click="minusOtherAttribute(answerForm.productAttr, index)" icon="minus-round"></Button>
+                    </div>
+                  </FormItem>
+                </li>
+              </ul>
+            </template>
+            <div class="customFormItem clearfix" v-if="$store.state.admin.paramList.indexOf('关联关键字') === -1">
+              <Checkbox class="fl" v-model="editData.keyword.checked" :disabled="isDefault">关联关键字</Checkbox>
+              <Input class="fr" v-if="editData.keyword.checked" style="width: 400px" v-model="answerForm.keyword"/>
+            </div>
+            <Checkbox class="mgt10" :disabled="isDefault" :true-value="1" :false-value="0" v-model="answerForm.missParam" v-if="$store.state.admin.paramList.indexOf('关联缺失参数') === -1">关联缺失参数</Checkbox>
+            <div class="customFormItem mgt20 clearfix" v-if="$store.state.admin.paramList.indexOf('计算函数') === -1" style="position: relative;">
+              <Checkbox class="fl" :disabled="isDefault" v-model="answerNewData.paramExtract.checked" @on-change="selectParamExtract">计算函数
+                <el-tooltip class="item" effect="dark" placement="top" v-if="errorTitle !== ''">
+                  <Icon type="help-circled" size="14"></Icon>
+                  <div slot="content" v-html="errorTitle"></div>
+                </el-tooltip>
+              </Checkbox>
+              <Select class="fr" v-if="answerNewData.paramExtract.checked" style="width: 400px;" v-model="answerForm.paramExtract" :disabled="isDefault" placeholder="请选择计算函数" @on-change="changeParamExtract" filterable clearable>
+                <Option v-for="item in editData.paramExtract.items" :value="item.paramId" :key="item.paramId">{{ item.paramValue }}</Option>
+              </Select>
+            </div>
+            <div class="customCheckbox mgb10" v-if="answerNewData.paramExtract.checked && answerForm.paramExtract !== ''">
+              <el-checkbox-group v-model="errorCodes" size="small">
+                <el-checkbox-button :disabled="isDefault" v-for="item in errorCode.items" :key="item.paramId" :label="item.paramId">{{ item.paramValue }}</el-checkbox-button>
+              </el-checkbox-group>
+            </div>
+            <div class="customFormItem mgt20 clearfix" v-if="$store.state.admin.paramList.indexOf('店铺配置') === -1" style="position: relative;">
+              <Checkbox class="fl" :disabled="isDefault" v-model="answerNewData.commonConfigId.checked" @on-change="selectCommConf">店铺配置</Checkbox>
+              <Select class="fr" v-if="answerNewData.commonConfigId.checked" style="width: 400px;" v-model="answerForm.commonConfigId" :disabled="isDefault" placeholder="请选择店铺配置" @on-change="changeCommConf" filterable clearable>
+                <Option v-for="item in editData.commonConfigId.items" :value="item.paramId" :key="item.paramId">{{ item.paramValue }}</Option>
+              </Select>
+            </div>
+            <div class="customCheckbox mgb10" v-if="answerNewData.commonConfigId.checked && answerForm.commonConfigId !== ''">
+              <el-checkbox-group v-model="commonConfigValue" size="small">
+                <el-checkbox-button :disabled="isDefault" v-for="item in comConfSingleValue.items" :key="item.paramId" :label="item.paramId">{{ item.paramValue }}</el-checkbox-button>
+              </el-checkbox-group>
+            </div>
+          </template>
+        </template>
+        <!--admin end-->
+      </Form>
+    </div>
+    <div slot="footer">
+      <Button type="primary" :disabled="ui.isAjax" @click="saveEditAnswer">保存</Button>
+      <Button type="text" @click="ui.showEditAnswer = false">取消</Button>
+    </div>
+  </Modal>
+</div>

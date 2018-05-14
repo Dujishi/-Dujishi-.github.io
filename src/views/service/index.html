@@ -1,0 +1,107 @@
+<div class="amBox pd15">
+  <div class="custom-slide-menu">
+    <RadioGroup v-model="infoForm.type" type="button" @on-change="changeType">
+      <Radio label="1" :key="1">售前</Radio>
+      <Radio label="2" :key="2">售后/财务</Radio>
+    </RadioGroup>
+  </div>
+  <Form v-model="saveForm" label-position="left" :label-width="90">
+    <FormItem class="mgt20" label="工作日">
+      <div class="customCheckbox">
+        <el-checkbox-group v-model="saveForm.workDaysList" size="small">
+          <el-checkbox-button v-for="(item, index) in workDaysList" :label="workDaysList[index]" :key="index + workDaysList[index]">{{ workDaysList[index] }}</el-checkbox-button>
+        </el-checkbox-group>
+      </div>
+    </FormItem>
+    <FormItem label="工作时间">
+      <el-time-picker
+        style="width: 127px"
+        size="mini"
+        format="HH:mm"
+        value-format="HH:mm"
+        v-model="saveForm.startTime"
+        placeholder="开始时间">
+      </el-time-picker>
+      <!--<TimePicker type="time" v-model="saveForm.startTime" format="HH:mm" style="width: 127px" placeholder="开始时间"></TimePicker>-->
+      <span>-</span>
+      <el-time-picker
+        style="width: 127px"
+        size="mini"
+        format="HH:mm"
+        value-format="HH:mm"
+        v-model="saveForm.endTime"
+        placeholder="结束时间">
+      </el-time-picker>
+    </FormItem>
+    <FormItem label="假期列表"></FormItem>
+    <div class="clearfix">
+      <table class="aiTable table-border fl" style="width: 736px;">
+        <thead>
+        <tr>
+          <th v-for="(item,index) in theadData" :key="index" :width="item.width">
+            <div class="tdCell ta-c">{{ item.name }}</div>
+          </th>
+        </tr>
+        </thead>
+        <tbody v-if="saveForm.shopHolidaysList.length">
+        <tr v-for="(items, index) in saveForm.shopHolidaysList" :key="items.name + index">
+          <td>
+            <div class="tdCell  ta-c">{{ items.name }}</div>
+          </td>
+          <td>
+            <div class="tdCell clearfix">
+              <div class="timedate-box">
+                <el-date-picker
+                  v-model="items.startTime"
+                  type="date" size="mini"
+                  value-format="yyyy-MM-dd"
+                  style="width: 115px"
+                  placeholder="开始时间">
+                </el-date-picker>
+              </div>
+              <span>-</span>
+              <div class="timedate-box">
+                <el-date-picker
+                  v-model="items.endTime"
+                  type="date" size="mini"
+                  value-format="yyyy-MM-dd"
+                  style="width: 115px"
+                  placeholder="结束时间">
+                </el-date-picker>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="tdCell clearfix">
+              <div class="timedate-box mgr10 fl" v-for="(item, x) in items.daysOffList" :key="items.daysOffList[x] + x">
+                <el-date-picker
+                  class="fl"
+                  v-model="items.daysOffList[x]"
+                  value-format="yyyy-MM-dd"
+                  type="date" size="mini"
+                  style="width: 115px; "
+                  placeholder="开始时间">
+                </el-date-picker>
+                <Icon class="close" type="ios-close" @click.native="removeResetDays(index, x)"></Icon>
+              </div>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <div class="holiday-box fl">
+        <h4>可插入假期列表</h4>
+        <div class="holiday-list">
+          <div class="customCheckbox dashed-btn">
+            <el-checkbox-group v-model="holidaysList" size="small" @change="changeHoliday">
+              <el-checkbox-button v-for="(item, index) in defaultHolidaysList" :label="item.name" :key="index + item.name">{{ item.name }}</el-checkbox-button>
+            </el-checkbox-group>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Form>
+  <div class="mgt20 mgb24 ta-c" style="width: 736px;">
+    <Button type="success" icon="checkmark" :disabled="isAjax" @click="saveSetting">保存</Button>
+  </div>
+</div>

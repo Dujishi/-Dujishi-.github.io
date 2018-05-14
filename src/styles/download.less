@@ -1,0 +1,14 @@
+@import url("./utils.less");
+.download-list { .pd(130px 20px 0);
+  .download-one { .wh(355px, 442px); .mgl(130px);
+    .download-title { .pd(20px); .lh(20px); .fc(@f16, @white); .ta-c(); .brdr(8px 8px 0 0); .bgc(#259af2); }
+    .download-box { .pd(30px); .brd(#dfe2e5); .no-brd-t();
+      .download-pic { .wh(84px, 84px); .pdt(44px); .lh(24px); .bgc(#259af2); .brdr(50%); .pos-r(); .mg(0 auto); .fc(16px, @white); .ta-c();
+        &:before { .wh(26px, 24px); content: ''; .pos-a(0, 16px, 50%); .mgl(-26px/2); background: url("../images/logo-sm.png"); }
+      }
+      .download-text { .fc(14px, #858e99); .lh(24px); text-align: justify; height: 120px; .of(hidden); text-overflow: ellipsis;display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical;}
+      .download-btn { .wh(140px, 46px); .fc(16px, @white); .lh(46px); .ta-c(); .db(); .mg(20px auto 0); .bgc(#259af2); .brdr(8px); .cs(); }
+    }
+  }
+}
+.no-data { display: flex; justify-content: center; align-items: center; flex-direction: column; .pd(40px 0); }

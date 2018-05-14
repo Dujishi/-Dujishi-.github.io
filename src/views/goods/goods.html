@@ -1,0 +1,142 @@
+<div class="">
+  <div class="amHeader clearfix">
+    <div class="search fl">
+      <Input class="searchInput" v-model="list.name" autocomplete="off" icon="search" placeholder="根据商品名、商品属性" @on-click="searchData" @on-enter="searchData"/>
+    </div>
+    <div class="operationBtn fr">
+      <Button type="primary" class="blue mgr20" @click="ui.showAttrs = true">
+        列表展示
+        <el-tooltip class="item" effect="dark" content="同步店铺内的商品信息" placement="top-end">
+          <Icon type="help-circled" size="14"></Icon>
+        </el-tooltip>
+      </Button>
+      <Button type="primary" class="blue" :disabled="ui.isAjax" @click="showConfirm('确定同步商品信息？')">
+        同步商品信息
+        <el-tooltip class="item" effect="dark" content="弹出列表展示控制弹框，可以控制商品管理主页能够展示的列" placement="top-end">
+          <Icon type="help-circled" size="14"></Icon>
+        </el-tooltip>
+      </Button>
+    </div>
+  </div>
+  <div class="amBox mgt20">
+    <div class="modalCustomTable">
+      <Table :columns="theadData" :data="tbodyData" ref="selection" @on-selection-change="selectionChange" @on-sort-change="productSort" border></Table>
+    </div>
+    <Page v-if="ui.total > ui.pageSize ? true : false" class="mgt30 ta-c"
+          :current="list.pageIndex"
+          :page-size="ui.pageSize" :total="ui.total"
+          show-total show-elevator
+          @on-change="changePage"></Page>
+    <!--otherAttrs-->
+    <Modal class="customModal" v-model="ui.showAttrs" width="560" :mask-closable="false">
+      <h2 class="modalTitle" slot="header">
+        <span>列表展示</span>
+      </h2>
+      <div class="modalBox">
+        <CheckboxGroup v-model="attrsForm">
+          <template v-for="item in attrsData">
+            <Checkbox v-if="item.attrKey === 'selection' || item.attrKey === 'extId' || item.attrKey === 'name' || item.attrKey === 'sizeTableName'|| item.attrKey === 'opera'" disabled :label="item.attrKey" :key="item.attrKey">{{ item.attrName }}</Checkbox>
+            <Checkbox v-else="item.attrKey === 'selection' || item.attrKey === 'extId' || item.attrKey === 'name' || item.attrKey === 'sizeTableName'|| item.attrKey === 'opera'" :label="item.attrKey" :key="item.attrKey">{{ item.attrName }}</Checkbox>
+          </template>
+        </CheckboxGroup>
+      </div>
+      <div slot="footer" class="ta-c">
+        <Button type="primary" @click="attrsChange">保存</Button>
+        <Button type="text" @click="ui.showAttrs = false">取消</Button>
+      </div>
+    </Modal>
+    <!--批量操作-->
+    <Modal class="customModal" v-model="ui.showBatchModal" width="560" :mask-closable="false">
+      <h2 class="modalTitle" slot="header">
+        <span>批量修改</span>
+      </h2>
+      <div class="modalBox noPd">
+        <Form class="customItems" v-model="batchModal" label-position="left" :label-width="110">
+          <div class="mgt10">
+            <Checkbox v-model="batchForm.selectedAll" @on-change="changeSelectAll" :true-value="1" :false-value="0">当前条件全部商品</Checkbox>
+          </div>
+          <div class="mgt20">
+            <FormItem v-if="batchModal.type === 'date'" :label="batchModal.title">
+              <el-date-picker
+                v-model="dateValue"
+                type="daterange"
+                format="yyyy-MM-dd"
+                value-format="yyyy-MM-dd"
+                size="mini"
+                range-separator="~"
+                start-placeholder="开始时间"
+                end-placeholder="结束时间">
+              </el-date-picker>
+            </FormItem>
+            <FormItem v-if="batchModal.type === 'select'" label="尺码表">
+              <Select v-model="batchForm.sizeTableId">
+                <Option v-for="item in sizeChartList" :value="item.sizeTableId" :key="item.sizeTableId">{{ item.name }}</Option>
+              </Select>
+            </FormItem>
+            <FormItem v-if="batchModal.type === 'radio'" :label="batchModal.title">
+              <RadioGroup v-model="radioValue">
+                <Radio v-for="(item, index) in batchModal.options" :key="index" :label="item">{{ item }}</Radio>
+              </RadioGroup>
+            </FormItem>
+            <FormItem v-if="batchModal.type === 'checkbox'" :label="batchModal.title">
+              <CheckboxGroup v-model="batchForm.attrValues">
+                <Checkbox v-for="(item, index) in batchModal.options" :key="index" :label="item">{{ item }}</Checkbox>
+              </CheckboxGroup>
+            </FormItem>
+            <FormItem v-if="batchModal.type === 'text'" :label="batchModal.title">
+              <Input :placeholder="batchModal.title" v-model="textValue"/>
+            </FormItem>
+          </div>
+        </Form>
+      </div>
+      <div slot="footer" class="ta-c">
+        <Button type="primary" :disabled="ui.isAjax" @click="batchSave">保存</Button>
+        <Button type="text" @click="ui.showBatchModal = false">取消</Button>
+      </div>
+    </Modal>
+    <!--info model-->
+    <Modal class="customModal" v-model="ui.showInfo" width="560" :mask-closable="false">
+      <h2 class="modalTitle" slot="header">
+        <span>商品编辑</span>
+      </h2>
+      <div class="modalBox noPd" :style="{ maxHeight: modalHeight + 'px'}">
+        <Form class="customItems" v-model="infoData" label-position="left" :label-width="100">
+          <FormItem label="名称">{{ infoData.name }}</FormItem>
+          <FormItem label="尺码表">
+            <Select v-model="editForm.sizeTableId">
+              <Option v-for="item in infoData.sizeTable" :value="item.tableId" :key="item.tableId">{{ item.tableName }}</Option>
+            </Select>
+          </FormItem>
+          <template v-if="infoEditData.length">
+            <h3 class="itemsTitle mgt10">商品属性（可更改）</h3>
+            <div class="mgt10">
+              <FormItem v-for="(item, index) in infoEditData" :key="item.attrKey" :label="item.attrName">
+                <DatePicker v-if="item.type === 'date'" v-model="item.attrValue" :value="item.attrValue" format="yyyy-MM-dd" type="daterange" placement="bottom-end" placeholder="请选择时间" style="width:100%"></DatePicker>
+                <RadioGroup v-if="item.type === 'radio'" v-model="item.attrValue">
+                  <Radio v-for="(x,i) in item.options" :key="i" :label="x">{{ x }}</Radio>
+                </RadioGroup>
+                <CheckboxGroup v-if="item.type === 'checkbox'" v-model="item.attrValue">
+                  <Checkbox v-for="(x,i) in item.options" :key="i" :label="x">{{ x }}</Checkbox>
+                </CheckboxGroup>
+                <Input v-if="item.type === 'text'" v-model="item.attrValue"/>
+              </FormItem>
+            </div>
+          </template>
+          <template v-if="infoEneditData.length">
+            <h3 class="itemsTitle mgt10">商品属性（不可更改）</h3>
+            <div class="mgt10" v-for="item in infoEneditData" :key="item.attrKey">
+              <FormItem :label="item.attrName">
+                <span>{{ item.attrValue }}</span>
+              </FormItem>
+            </div>
+          </template>
+        </Form>
+      </div>
+      <div slot="footer" class="ta-c">
+        <Button type="primary" :disabled="ui.isAjax" @click="saveEdit">保存</Button>
+        <Button type="text" @click="ui.showInfo = false">取消</Button>
+      </div>
+    </Modal>
+  </div>
+  <confirm-modal :cd="confirmData" :ui="ui" :cb="confirmCB"></confirm-modal>
+</div>
