@@ -12,7 +12,6 @@ a {
 }
 
 .container {
-	max-width: 1200px;
 	height: auto;
 	}
 
@@ -59,11 +58,8 @@ a {
 /** Countdown */
 
 #countdown {
-	max-width:747px;
-	height:auto;
-	margin: 0px auto;
-	display: inline-block;
-	margin-top: 12px;
+	display: flex;
+	justify-content: center;
 }
 .dash {
 	width: 127px;
