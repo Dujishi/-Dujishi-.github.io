@@ -138,9 +138,8 @@ function bd_encrypt(gg_lng,gg_lat) {
 				alt:Array.from(new Set(obj.alt)),
 				lon:Array.from(new Set(obj.lon))
 		}
-		console.log(formatObj)
-		let averageAlt = (formatObj.alt[length-1] + formatObj.alt[0])/2
-		let averageLon = (formatObj.lon[length-1] + formatObj.lon[0])/2
+		let averageAlt = formatObj.alt.reduce((t,c)=>t+c,0)/formatObj.alt.length
+		let averageLon = formatObj.lon.reduce((t,c)=>t+c,0)/formatObj.lon.length
 	  return {averageAlt,averageLon}
 	} 
 
@@ -150,7 +149,7 @@ function bd_encrypt(gg_lng,gg_lat) {
         imageOffset: new BMap.Size(0, 0 - 13 * 25) // 设置图片偏移  
     })
 		let marker1 = new BMap.Marker(new BMap.Point(averageAlt, averageLon),{ icon: tagMarkerIcon });
-    let label1 = new BMap.Label(item.name, { offset: new BMap.Size(0,0)});
+    let label1 = new BMap.Label(item.name, { offset: new BMap.Size(-10,10)});
 		label1.setStyle({
         color: "#555",
         fontSize: "12px",
