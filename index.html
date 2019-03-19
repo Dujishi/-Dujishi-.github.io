@@ -4,9 +4,9 @@
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 	<style type="text/css">
 		body, html{width: 100%;height: 100%;margin:0;font-family:"微软雅黑";font-size:12px;}
-		#l-map{height:90%;width:100%;font-size: 12px;}
+		#l-map{height:89%;width:100%;font-size: 12px;}
 		#r-result{width:90%;}
-		.mint-searchbar{padding: 1%;height: 7%;margin-top: 1%;}
+		.mint-searchbar{padding: 1%;height: 8%;margin-top: 1%;}
   </style>
 	<!-- 引入样式 -->
 	<link rel="stylesheet" href="https://unpkg.com/mint-ui/lib/style.css">
@@ -98,6 +98,7 @@
 
 			let marker = new BMap.Marker(point)  // 创建标注
 			map.addOverlay(marker)
+			marker.setAnimation(BMAP_ANIMATION_BOUNCE); //跳动的动画
 			let opts = {
 					width : 100,     // 信息窗口宽度
 					height: 50,     // 信息窗口高度
@@ -107,25 +108,42 @@
 			let infoWindow = new BMap.InfoWindow(`地址:${address}`, opts)  // 创建信息窗口对象 
 			map.openInfoWindow(infoWindow,point) //开启信息窗口
 
-
-			var polygon = new BMap.Polygon([
-		new BMap.Point(116.387112,39.920977),
-		new BMap.Point(116.385243,39.913063),
-		new BMap.Point(116.394226,39.917988),
-		new BMap.Point(116.401772,39.921364),
-		new BMap.Point(116.41248,39.927893)
-	], {strokeColor:"blue", strokeWeight:2, strokeOpacity:0.5});  //创建多边形
-	map.addOverlay(polygon);   //增加多边形
-
-
 	function drawLine(arr){
 		let list = arr.map(i=>new BMap.Point(i.alt,i.lon))
 		let polygon = new BMap.Polygon(list, {strokeColor:"blue", strokeWeight:2, strokeOpacity:0.5});  //创建多边形
 		map.addOverlay(polygon);
-	} //增加多边形
+
+		let obj = arr.reduce((t,c)=>{
+			t.alt.push(c.alt)
+			t.lon.push(c.lon)
+			return t
+			},{alt:[],lon:[]})
+
+		let formatObj = {
+				alt:Array.from(new Set(obj.alt)),
+				lon:Array.from(new Set(obj.lon))
+		}
+		let averageAlt = (formatObj.alt[length-1] + formatObj.alt[0])/2
+		let averageLon = (formatObj.lon[length-1] + formatObj.lon[0])/2
+	  return {averageAlt,averageLon}
+	} 
 
 	addressList.map(item=>{
-		drawLine(item.lists)
+		let {averageAlt,averageLon} = drawLine(item.lists)
+		let tagMarkerIcon = new BMap.Icon("http://api.map.baidu.com/img/markers.png", new BMap.Size(23, 25), {
+        imageOffset: new BMap.Size(0, 0 - 13 * 25) // 设置图片偏移  
+    })
+		let marker1 = new BMap.Marker(new BMap.Point(averageAlt, averageLon),{ icon: tagMarkerIcon });
+    let label1 = new BMap.Label(item.name, { offset: new BMap.Size(40, -60) });
+		label1.setStyle({
+        color: "#555",
+        fontSize: "12px",
+        backgroundColor: "#eee",
+        border: "1px solid #ccc",
+				borderRadius:'2px'
+    });
+    marker1.setLabel(label1);
+		map.addOverlay(marker1);
 	})
 
 	marker.addEventListener("click", function(){          
