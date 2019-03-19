@@ -90,10 +90,9 @@
 				...local.getResults().getPoi(0),
 				...area
 			}
+
 			map.centerAndZoom(point, 18)
 			map.enableScrollWheelZoom()
-			let boundary = new BMap.Boundary()
-			// boundary.get(`${province}${city}${district}`, (rs)=>{       //获取行政区域
 			map.clearOverlays()    //清除地图上所有覆盖物 
 
 			let marker = new BMap.Marker(point)  // 创建标注
@@ -110,7 +109,7 @@
 
 	function drawLine(arr){
 		let list = arr.map(i=>new BMap.Point(i.alt,i.lon))
-		let polygon = new BMap.Polygon(list, {strokeColor:"blue", strokeWeight:2, strokeOpacity:0.5});  //创建多边形
+		let polygon = new BMap.Polygon(list, {strokeColor:'rgb(30,110,30)', strokeWeight:2, strokeOpacity:0.5});  //创建多边形
 		map.addOverlay(polygon);
 
 		let obj = arr.reduce((t,c)=>{
@@ -139,7 +138,7 @@
         color: "#555",
         fontSize: "12px",
         backgroundColor: "#eee",
-        border: "1px solid rgb(30,110,30)",
+        border: "1px solid #ccc",
 				borderRadius:'2px'
     });
     marker1.setLabel(label1);
