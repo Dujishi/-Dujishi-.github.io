@@ -32,6 +32,20 @@
 		return document.getElementById(id)
 	}
 
+//高德转百度经纬度
+function bd_encrypt(gg_lng,gg_lat) {
+    var X_PI = Math.PI * 3000.0 / 180.0;
+    var x = gg_lng, y = gg_lat;
+    var z = Math.sqrt(x * x + y * y) + 0.00002 * Math.sin(y * X_PI);
+    var theta = Math.atan2(y, x) + 0.000003 * Math.cos(x * X_PI);
+    var bd_lng = z * Math.cos(theta) + 0.0065;
+    var bd_lat = z * Math.sin(theta) + 0.006;
+    return {
+        bd_lat: bd_lat,
+        bd_lng: bd_lng
+    }
+}
+
 	let map = new BMap.Map("l-map")
 	let geolocation = new BMap.Geolocation()
 	geolocation.getCurrentPosition(function(r){
@@ -113,8 +127,10 @@
 		map.addOverlay(polygon);
 
 		let obj = arr.reduce((t,c)=>{
-			t.alt.push(c.alt)
-			t.lon.push(c.lon)
+
+			let o = bd_encrypt(c.alt,c.lon)
+			t.alt.push(o.bd_lng)
+			t.lon.push(o.bd_lat)
 			return t
 			},{alt:[],lon:[]})
 
@@ -122,6 +138,7 @@
 				alt:Array.from(new Set(obj.alt)),
 				lon:Array.from(new Set(obj.lon))
 		}
+		console.log(formatObj)
 		let averageAlt = (formatObj.alt[length-1] + formatObj.alt[0])/2
 		let averageLon = (formatObj.lon[length-1] + formatObj.lon[0])/2
 	  return {averageAlt,averageLon}
@@ -133,7 +150,7 @@
         imageOffset: new BMap.Size(0, 0 - 13 * 25) // 设置图片偏移  
     })
 		let marker1 = new BMap.Marker(new BMap.Point(averageAlt, averageLon),{ icon: tagMarkerIcon });
-    let label1 = new BMap.Label(item.name, { offset: new BMap.Size(40, -60) });
+    let label1 = new BMap.Label(item.name, { offset: new BMap.Size(0,0)});
 		label1.setStyle({
         color: "#555",
         fontSize: "12px",
@@ -149,22 +166,6 @@
 		map.openInfoWindow(infoWindow,point); //开启信息窗口
 	});
 
-			
-
-
-			// let count = rs.boundaries.length //行政区域的点有多少个
-			// if (count === 0) {
-			// 	alert('未能获取当前输入行政区域')
-			// 	return 
-			// }
-      // let pointArray = []
-			// for (let i = 0 ;i < count ;i++) {
-			// 	let ply = new BMap.Polygon(rs.boundaries[i], {strokeWeight: 2, strokeColor: "#ff0000"}) //建立多边形覆盖物
-			// 	map.addOverlay(ply)  //添加覆盖物
-			// 	pointArray = pointArray.concat(ply.getPath())
-			// }    
-			// 	map.setViewport(pointArray)    //调整视野  
-		  // })  
 		}
 			let local = new BMap.LocalSearch(map, { //智能搜索
 				onSearchComplete: myFun
