@@ -1,1 +1,220 @@
-<!DOCTYPE html><html lang=en><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=icon href=./favicon.ico><title>2019年度还贷明细</title><link href=/css/app.0907a49e.css rel=preload as=style><link href=/css/chunk-vendors.d9890480.css rel=preload as=style><link href=/js/app.2d99b8b9.js rel=preload as=script><link href=/js/chunk-vendors.e2ba3b37.js rel=preload as=script><link href=/css/chunk-vendors.d9890480.css rel=stylesheet><link href=/css/app.0907a49e.css rel=stylesheet></head><body><noscript><strong>We're sorry but payment-details doesn't work properly without JavaScript enabled. Please enable it to continue.</strong></noscript><div id=app></div><script src=/js/chunk-vendors.e2ba3b37.js></script><script src=/js/app.2d99b8b9.js></script></body></html>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <!-- import CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+</head>
+<body>
+  <div id="app">
+      <template>
+    <el-table
+      :data="tableData"
+      border
+      style="margin: 5% auto;width:80%"
+      >
+      <el-table-column
+        header-align='center'
+        align="center"
+        prop="hphm"
+        label="号牌号码">
+      </el-table-column>
+       <el-table-column
+        header-align='center'
+        align="center"
+        prop="wfsj"
+        label="违法时间">
+      </el-table-column>
+       <el-table-column
+        header-align='center'
+        prop="wfdz"
+        label="违法地点">
+      </el-table-column>
+       <el-table-column
+        header-align='center'
+        prop="wfms"
+        label="违法行为">
+      </el-table-column>
+       <el-table-column
+        header-align='center'
+        align="center"
+        prop="wfjfs"
+        label="记分">
+      </el-table-column>
+       <el-table-column
+        header-align='center'
+        align="center"
+        prop="fkje"
+        label="罚款金额">
+      </el-table-column>
+      <el-table-column
+        header-align='center'
+        prop="cjjgmc"
+        label="处理机关">
+      </el-table-column>
+       <el-table-column
+        header-align='center'
+        align="center"
+        prop="jkbjStr"
+        label="交款标记">
+      </el-table-column>
+      <el-table-column
+        header-align='center'
+        align="center"
+        prop="clbjStr"
+        label="处理标记">
+      </el-table-column>
+      <el-table-column
+        header-align='center'
+        align="center"
+        prop="clsj"
+        label="处理时间">
+      </el-table-column>
+    </el-table>
+  </template>
+    
+  </div>
+</body>
+  <!-- import Vue before Element -->
+  <script src="https://unpkg.com/vue/dist/vue.js"></script>
+  <!-- import JavaScript -->
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      data() {
+
+        return { 
+          tableData:[{
+  "wfms": "不按规定停车且驾驶人不在现场",
+  "fkje": "200",
+  "wfjfs": "0",
+  "wfzt": null,
+  "xh": "3118007902342072",
+  "hpzl": "02",
+  "hphm": "沪C129JS",
+  "wfsj": "2019-09-05 07:00",
+  "wfdz": "徐民路进华徐公路西约30米",
+  "wfxw": "10390",
+  "clbj": "1",
+  "clsj": "2019-10-10 13:27",
+  "jkbj": "1",
+  "cjjgmc": "上海市公安局青浦分局交通警察支队一大队",
+  "cjjg": "311800010000",
+  "gxsj": "2019-09-06 11:58",
+  "clbjStr": "已处理",
+  "jkbjStr": "已交款",
+  "glbm": "311800010000",
+  "jdsbh": null
+}, {
+  "wfms": "违反禁止标线指示",
+  "fkje": "200",
+  "wfjfs": "3",
+  "wfzt": null,
+  "xh": "3118007902340060",
+  "hpzl": "02",
+  "hphm": "沪C129JS",
+  "wfsj": "2019-08-28 08:15",
+  "wfdz": "华徐公路沪青平公路北约20米",
+  "wfxw": "13450",
+  "clbj": "1",
+  "clsj": "2019-10-10 13:31",
+  "jkbj": "1",
+  "cjjgmc": "上海市公安局青浦分局交通警察支队",
+  "cjjg": "311800000000",
+  "gxsj": "2019-09-05 13:18",
+  "clbjStr": "已处理",
+  "jkbjStr": "已交款",
+  "glbm": "311800000000",
+  "jdsbh": null
+}, {
+  "wfms": "驾驶机动车不按机动车信号灯通行",
+  "fkje": "200",
+  "wfjfs": "6",
+  "wfzt": null,
+  "xh": "3118007902335210",
+  "hpzl": "02",
+  "hphm": "沪C129JS",
+  "wfsj": "2019-08-26 08:30",
+  "wfdz": "华徐公路近会涵路（南向北）",
+  "wfxw": "16250",
+  "clbj": "1",
+  "clsj": "2019-10-10 15:45",
+  "jkbj": "1",
+  "cjjgmc": "上海市公安局青浦分局交通警察支队",
+  "cjjg": "311800000000",
+  "gxsj": "2019-09-02 09:03",
+  "clbjStr": "已处理",
+  "jkbjStr": "已交款",
+  "glbm": "311800000000",
+  "jdsbh": null
+}, {
+  "wfms": "不按规定停车且驾驶人虽在现场拒绝立即驶离",
+  "fkje": "200",
+  "wfjfs": "0",
+  "wfzt": null,
+  "xh": "3117007904163111",
+  "hpzl": "02",
+  "hphm": "沪C129JS",
+  "wfsj": "2019-05-18 19:12",
+  "wfdz": "沪松公路进沪亭南路西约200米",
+  "wfxw": "10391",
+  "clbj": "1",
+  "clsj": "2019-10-10 13:32",
+  "jkbj": "1",
+  "cjjgmc": "上海市公安局松江分局交通警察支队第三责任区大队",
+  "cjjg": "311700040000",
+  "gxsj": "2019-05-29 09:14",
+  "clbjStr": "已处理",
+  "jkbjStr": "已交款",
+  "glbm": "311700040000",
+  "jdsbh": null
+}, {
+  "wfms": "不按规定使用灯光",
+  "fkje": "100",
+  "wfjfs": "1",
+  "wfzt": null,
+  "xh": "3118007902214955",
+  "hpzl": "02",
+  "hphm": "沪C129JS",
+  "wfsj": "2019-05-17 08:06",
+  "wfdz": "西徐联路沪青平公路(西)南约30米",
+  "wfxw": "1102E",
+  "clbj": "1",
+  "clsj": "2019-10-10 13:38",
+  "jkbj": "1",
+  "cjjgmc": "上海市公安局青浦分局交通警察支队",
+  "cjjg": "311800000000",
+  "gxsj": "2019-05-28 16:24",
+  "clbjStr": "已处理",
+  "jkbjStr": "已交款",
+  "glbm": "311800000000",
+  "jdsbh": null
+}, {
+  "wfms": "禁鸣区鸣喇叭",
+  "fkje": "100",
+  "wfjfs": "0",
+  "wfzt": null,
+  "wfbh": "3118002019181700076251",
+  "jdsbh": "3101181700076251",
+  "jszh": "342426199010202439",
+  "hphm": "沪C129JS",
+  "wfsj": "2019-06-04 08:05",
+  "wfdz": "明珠路育才路西约3米",
+  "wfxw": "10480",
+  "cjjgmc": "上海市公安局青浦分局交通警察支队一大队",
+  "jkbj": "1",
+  "gxsj": "2019-06-04 09:21",
+  "dsr": "杜继师",
+  "clsj": "2019-06-04 08:05",
+  "cjbj": null,
+  "type": null,
+  "cljg": "311800010000",
+  "glbm": "311800010000",
+   "clbjStr": "已处理",
+  "jkbjStr": "已交款",
+}] }
+      }
+    })
+  </script>
+</html>
